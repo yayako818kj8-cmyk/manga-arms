@@ -96,7 +96,7 @@ const container = document.getElementById("container");
 const progressBar = document.getElementById("progress-bar");
 
 /* ===== マンガ画像を読み込む ===== */
-fetch("pages.json")
+fetch("pages.json3")
   .then(res => res.json())
   .then(data => {
 
@@ -105,7 +105,7 @@ fetch("pages.json")
       page.className = "page";
 
       const img = document.createElement("img");
-      img.src = "pages/" + file;
+      img.src = "pages3/" + file;
 
       page.appendChild(img);
       container.appendChild(page);
