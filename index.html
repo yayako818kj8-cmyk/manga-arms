@@ -150,14 +150,13 @@ fetch("pages.json3")
     survey.id = "survey";
 
     survey.innerHTML = `
-      <h1>アンケートにご協力ください</h1>
-      <p>ご意見は今後の研究に活用します。</p>
+  <h1>アンケートにご協力ください</h1>
+  <p>ご意見は今後の研究に活用します。</p>
 
-      <iframe
-        src="https://docs.google.com/forms/d/e/1FAIpQLSfd_d2_oWxpvHFcsp6C2Ie0LSE-QEODlY2OwnPPWjIceXKpBw/viewform?usp=publish-editor">
-      </iframe>
-    `;
-
+  <iframe
+    src="https://docs.google.com/forms/d/e/1FAIpQLSfd_d2_oWxpvHFcsp6C2Ie0LSE-QEODlY2OwnPPWjIceXKpBw/viewform?usp=sharing&ouid=107445254052416859927">
+  </iframe>
+`;
     container.appendChild(survey);
 
     /* 最初は右端へ */
