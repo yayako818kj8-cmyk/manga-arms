@@ -6,130 +6,193 @@
 <title>横スクロールマンガ</title>
 
 <style>
-  /* ===== 基本 ===== */
-  body {
-    margin: 0;
-    overflow: hidden; /* bodyはスクロールさせない */
-    background: #000;
+  body{
+    margin:0;
+    overflow:hidden;
+    background:#000;
   }
 
-  /* ===== 読了率バー ===== */
-  #progress {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 6px;
-    width: 100%;
-    background: rgba(255,255,255,0.2);
-    z-index: 1000;
+  /* 読了率バー */
+  #progress{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:6px;
+    background:rgba(255,255,255,0.2);
+    z-index:1000;
   }
 
-  #progress-bar {
-    height: 100%;
-    width: 0%;
-    background: #00ffcc;
-    transition: width 0.1s;
+  #progress-bar{
+    width:0%;
+    height:100%;
+    background:#00ffcc;
   }
 
-  /* ===== マンガコンテナ ===== */
-  #container {
-    display: flex;
-    flex-direction: row-reverse; /* 右 → 左 */
-    height: 100vh;
+  /* マンガ */
+  #container{
+    display:flex;
+    flex-direction:row-reverse;
+    height:100vh;
 
-    overflow-x: scroll;
-    overflow-y: hidden;
+    overflow-x:auto;
+    overflow-y:hidden;
 
-    scroll-behavior: smooth;
+    scroll-behavior:smooth;
   }
 
-  /* ===== 1コマ ===== */
-  .page {
-    flex: 0 0 100vw; /* 1コマ＝画面幅 */
-    height: 100vh;
+  .page{
+    flex:0 0 100vw;
+    height:100vh;
   }
 
-  .page img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
+  .page img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
   }
 
-  /* ===== アンケートページ ===== */
-  #survey {
-    flex: 0 0 100vw;
-    height: 100vh;
-    background: #fff;
-    color: #000;
+  /* アンケート */
+  #survey{
+    flex:0 0 100vw;
+    height:100vh;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    background:#fff;
+    color:#000;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
   }
 
-  #survey h1 {
-    margin-bottom: 0.5rem;
+  iframe{
+    width:90%;
+    height:70%;
+    border:none;
   }
 
-  iframe {
-    width: 90%;
-    height: 70%;
-    border: none;
+  /* 縦向き警告 */
+  #rotate-message{
+    position:fixed;
+    inset:0;
+    background:#000;
+    color:#fff;
+
+    display:none;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+    font-size:1.5rem;
+    z-index:9999;
+  }
+
+  @media (orientation:portrait){
+    #rotate-message{
+      display:flex;
+    }
   }
 </style>
 </head>
 
 <body>
 
-<!-- 読了率バー -->
+<div id="rotate-message">
+  このマンガは横向きでご覧ください
+</div>
+
 <div id="progress">
   <div id="progress-bar"></div>
 </div>
 
-<!-- マンガ本体 -->
 <div id="container"></div>
 
 <script>
+
 const container = document.getElementById("container");
 const progressBar = document.getElementById("progress-bar");
 
-/* ===== マンガ画像を読み込む ===== */
+/* JSON読み込み */
 fetch("pages.json3")
-  .then(res => res.json())
-  .then(data => {
+  .then(response => {
 
-    data.forEach(file => {
+    if(!response.ok){
+      throw new Error("JSON読込失敗");
+    }
+
+    return response.json();
+  })
+
+  .then(images => {
+
+    images.forEach(file => {
+
       const page = document.createElement("div");
       page.className = "page";
 
       const img = document.createElement("img");
-      img.src = "pages3/" + file;
+
+      /* 画像はリポジトリ直下 */
+      img.src = file;
+
+      img.loading = "lazy";
 
       page.appendChild(img);
       container.appendChild(page);
+
     });
 
-    /* ===== アンケートページ ===== */
+    /* アンケート */
     const survey = document.createElement("div");
+
     survey.id = "survey";
+
     survey.innerHTML = `
       <h1>アンケートにご協力ください</h1>
       <p>ご意見は今後の研究に活用します。</p>
-      <iframe src="https://docs.google.com/forms/d/1e4g9vLe-CaiT-30MiuNK_9ZcCsplhU55qEbK2p2E_zo/viewform"></iframe>
+
+      <iframe
+        src="https://docs.google.com/forms/d/1dnXGvxsTf0pQtNTEmbocFhhgPrQIKwmq73kp2T3Mt5Q/viewform">
+      </iframe>
     `;
+
     container.appendChild(survey);
+
+    /* 最初は右端へ */
+    container.scrollLeft = container.scrollWidth;
+
+  })
+
+  .catch(error => {
+    console.error(error);
+
+    container.innerHTML = `
+      <div style="
+        color:white;
+        padding:30px;
+        font-size:20px;">
+        JSONまたは画像の読み込みに失敗しました
+      </div>
+    `;
   });
 
-/* ===== 読了率計算（container基準） ===== */
+/* 読了率 */
 container.addEventListener("scroll", () => {
-  const maxScroll = container.scrollWidth - container.clientWidth;
-  const progress = 1 - container.scrollLeft / maxScroll;
+
+  const maxScroll =
+    container.scrollWidth - container.clientWidth;
+
+  if(maxScroll <= 0) return;
+
+  const progress =
+    1 - (container.scrollLeft / maxScroll);
 
   progressBar.style.width =
-    Math.max(0, Math.min(progress * 100, 100)) + "%";
+    (progress * 100) + "%";
 });
+
 </script>
 
 </body>
